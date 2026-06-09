@@ -7,41 +7,44 @@ description: Run the manual QA test suite for the Petter app. Boots the iOS simu
 
 Runs all flows from [QA.md](QA.md) against the live app in the iOS simulator and writes a results file.
 
+## Prerequisites
+
+`agent-device` must be installed:
+
+```bash
+npm install -g agent-device
+agent-device --version   # verify
+```
+
+No Accessibility permissions required — agent-device uses XCTest under the hood.
+
 ## Steps
 
 ### 1. Boot the simulator
 
 ```bash
-# Boot iPhone 17 Pro (or whichever is available) if not already booted
-xcrun simctl boot E3A60C81-FE1E-4A8A-9429-AE74C044A014 2>/dev/null || true
+DEVICE_UDID="E3A60C81-FE1E-4A8A-9429-AE74C044A014"
+xcrun simctl boot "$DEVICE_UDID" 2>/dev/null || true
 open -a Simulator
+xcrun simctl bootstatus "$DEVICE_UDID" -b   # blocks until fully ready
 ```
 
 ### 2. Start the app
 
-> Use the local binary — the npm proxy intercepts `npx expo`.
-
 ```bash
 ./node_modules/.bin/expo start --ios 2>&1 | tee /tmp/expo_qa.log &
-```
-
-Wait until the log contains `iOS Bundled` before proceeding.
-
-```bash
 until grep -q "iOS Bundled" /tmp/expo_qa.log 2>/dev/null; do sleep 2; done
 ```
 
 ### 3. Reset app state (fresh run)
 
-Clear AsyncStorage so onboarding flows start from scratch.
+Wipe AsyncStorage so onboarding flows start from scratch.
 
 ```bash
-# Terminate Expo Go
-xcrun simctl terminate booted host.exp.Exponent 2>/dev/null || true
+DEVICE_UDID="E3A60C81-FE1E-4A8A-9429-AE74C044A014"
+xcrun simctl terminate "$DEVICE_UDID" host.exp.Exponent 2>/dev/null || true
 
-# Locate Expo Go's data container and wipe AsyncStorage
-DEVICE=$(xcrun simctl list devices | grep Booted | grep -oE '[A-F0-9-]{36}' | head -1)
-EXPO_DATA=$(find ~/Library/Developer/CoreSimulator/Devices/$DEVICE/data/Containers/Data/Application \
+EXPO_DATA=$(find ~/Library/Developer/CoreSimulator/Devices/$DEVICE_UDID/data/Containers/Data/Application \
   -maxdepth 2 -name "*.plist" 2>/dev/null \
   | xargs grep -l "host.exp.Exponent" 2>/dev/null \
   | head -1 | xargs -I{} dirname {})
@@ -49,65 +52,106 @@ EXPO_DATA=$(find ~/Library/Developer/CoreSimulator/Devices/$DEVICE/data/Containe
 if [ -n "$EXPO_DATA" ]; then
   rm -rf "$EXPO_DATA/Documents/RCTAsyncLocalStorage_V1/"
   rm -rf "$EXPO_DATA/Documents/RCTAsyncLocalStorage/"
-  echo "AsyncStorage cleared at $EXPO_DATA"
 fi
 
-# Reopen the app via its exp:// URL
-xcrun simctl openurl booted "$(grep -oE 'exp://[^ ]+' /tmp/expo_qa.log | tail -1)"
+xcrun simctl openurl "$DEVICE_UDID" "$(grep -oE 'exp://[^ ]+' /tmp/expo_qa.log | tail -1)"
+sleep 3   # wait for app to render
 ```
 
-Wait ~3 s for the app to render before the first screenshot.
-
-### 4. Interaction primitives
-
-**Screenshot** (call after every action, save to `/tmp/qa-step-<N>.png`):
+### 4. Open an agent-device session
 
 ```bash
-xcrun simctl io booted screenshot /tmp/qa-step-N.png
+agent-device open host.exp.Exponent --platform ios --device "iPhone 17 Pro"
 ```
 
-Always read the screenshot image with the Read tool to observe the current UI.
+Keep this session open for the entire QA run. Close it at the end with `agent-device close`.
 
-**Tap** (logical-point coordinates on a 393 × 852 iPhone 17 Pro screen):
+### 5. Interaction primitives
+
+**Snapshot** — always re-snapshot after any action that changes the screen:
 
 ```bash
-xcrun simctl io booted tap <x> <y>
+agent-device snapshot -i          # interactive refs only (fast path before acting)
+agent-device snapshot             # full readable state (use for assertions)
 ```
 
-**Type text** (requires the keyboard to be visible and an input focused):
+Refs look like `@e7`. They are valid until the next press/fill/scroll/navigation.
+
+**Tap / press**:
 
 ```bash
-osascript -e 'tell application "Simulator" to activate'
-osascript -e 'tell application "System Events" to type text "Luna"'
+agent-device press @e7
+agent-device press 'label="Meet Luna'\''s routine"'
 ```
 
-**Dismiss keyboard** (tap outside the input or use Return):
+**Fill a text field** — always press first to focus, then fill:
 
 ```bash
-xcrun simctl io booted tap 196 500   # neutral area
+agent-device press @e7
+agent-device fill @e7 "Luna"
 ```
 
-**Scroll / swipe**:
+**Type into the focused field** (appends, does not replace):
 
 ```bash
-xcrun simctl io booted swipe <startX> <startY> <endX> <endY> <durationMs>
-# e.g. scroll down: xcrun simctl io booted swipe 196 600 196 200 300
+agent-device type "Luna"
 ```
 
-### 5. Execute each flow
+**Dismiss keyboard**:
+
+```bash
+agent-device keyboard dismiss
+```
+
+**Scroll**:
+
+```bash
+agent-device scroll down
+agent-device scroll up
+```
+
+**Wait**:
+
+```bash
+agent-device wait 1500            # ms
+agent-device wait 'label="Good job!"'   # wait for element to appear
+```
+
+**Screenshot** — save then read with the Read tool to observe the UI:
+
+```bash
+agent-device screenshot /tmp/qa-step-N.png
+```
+
+**Dismiss React Native overlays** (LogBox / RedBox) if they appear:
+
+```bash
+agent-device react-native dismiss-overlay
+```
+
+### 6. Execute each flow
 
 Open [QA.md](QA.md) and go through every flow in order. For each step:
 
 1. Perform the described action using the primitives above.
-2. Take a screenshot and read it with the Read tool.
-3. Compare what you see against the **Expected Visual** column.
-4. Record the outcome as `✅ PASS`, `❌ FAIL`.
+2. Run `agent-device snapshot -i` (or `snapshot`) to read current state.
+3. Take a screenshot with `agent-device screenshot /tmp/qa-step-N.png` and read it with the Read tool.
+4. Compare against the **Expected Visual** column.
+5. Record the outcome as `✅ PASS` or `❌ FAIL`.
 
-**Ordering matters**: flows that depend on prior state (History flows) assume earlier flows ran first.
+**Ordering matters**: History flows assume earlier flows ran first.
 
-**Time-sensitive flows**: Flow 6 (Slot State Differentiation) depends on the current hour. Note the time in the results.
+**Time-sensitive flows**: Flow 6 (Slot State Differentiation) depends on the current hour — note the time in the results.
 
-### 6. Write results
+**Between flows that require fresh state**: terminate and relaunch via simctl openurl (step 3), then call `agent-device open host.exp.Exponent --platform ios --device "iPhone 17 Pro"` again to re-attach.
+
+### 7. Close the session
+
+```bash
+agent-device close
+```
+
+### 8. Write results
 
 Create `qa-results-<YYYY-MM-DD-HH-mm>.md` in the project root:
 
@@ -137,8 +181,8 @@ Create `qa-results-<YYYY-MM-DD-HH-mm>.md` in the project root:
 ---
 ```
 
-Repeat the flow table for each flow. Under a `❌ FAIL` row add a **Note** line describing what went wrong.
+Under any `❌ FAIL` row, add a **Note** line describing what went wrong.
 
-### 7. Report back
+### 9. Report back
 
-After writing the file, summarise the results in one sentence: how many flows passed, how many failed, and the filename.
+Summarise in one sentence: how many flows passed, how many failed, and the filename.
