@@ -7,6 +7,17 @@ description: Run the manual QA test suite for the Petter app. Boots the iOS simu
 
 Runs all flows from [QA.md](QA.md) against the live app in the iOS simulator and writes a results file.
 
+## HARD RULE — Observe Only
+
+This is a **read-only testing session**. You MUST NOT:
+
+- Edit, write, or modify any source code files (no Edit, no Write to src/)
+- Debug, diagnose root causes, or propose fixes
+- Read source code to investigate errors
+- Suggest or apply patches
+
+When you encounter a bug, error overlay, or unexpected behavior: **record it as a ❌ FAIL in the results file with a description of what you observed, then move on to the next step/flow.** If the app is in an unrecoverable state for a flow, skip remaining steps in that flow, note it, and proceed to the next flow (resetting app state if needed).
+
 ## Prerequisites
 
 `agent-device` must be installed:
