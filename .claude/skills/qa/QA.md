@@ -18,6 +18,7 @@ description: Manual QA test cases for the Petter app. Each flow covers one user-
 | 3 | Type a pet name (e.g. "Luna") | CTA button becomes fully opaque, label updates to include the pet name |
 | 4 | Tap CTA or press keyboard "Done" | Screen transitions to a "ready" confirmation screen with 🐾 emoji, pet name in heading |
 | 5 | Tap "Let's go" / CTA on ready screen | App navigates to the main tab layout (Today / History / Manage tabs visible at bottom) |
+| 6 | iOS notification permission prompt appears (first launch only) | System dialog asks to allow notifications; tap "Allow". Daily slot reminders are scheduled in the background |
 
 ---
 
@@ -41,7 +42,7 @@ description: Manual QA test cases for the Petter app. Each flow covers one user-
 |---|------|-----------------|
 | 1 | Open Today tab | Current time slot header has primary-color background with white text; future slots are dimmed (50% opacity) |
 | 2 | Tap an uncompleted task in the active slot | Task row updates to a checked/completed state |
-| 3 | Celebration overlay appears | White bubble with 🐾 and "Good job!" message pops in with spring animation; colored confetti particles float upward |
+| 3 | Celebration overlay appears | White bubble with 🐾 and "Great job!" message pops in with spring animation; a Lottie confetti burst fans out from the center in the brand celebration palette (peach, sage, sky, yellow, indigo, coral). With reduce-motion enabled, the bubble shows instantly with no confetti |
 | 4 | Overlay auto-dismisses (~1.4 s) | Celebration fades out; task remains checked; slot counter (e.g. "1/3") increments |
 
 ---
@@ -117,7 +118,7 @@ description: Manual QA test cases for the Petter app. Each flow covers one user-
 
 | # | Step | Expected Visual |
 |---|------|-----------------|
-| 1 | Observe task row in Manage | Each row has a task label and a ✕ button on the right |
+| 1 | Observe task row in Manage | Each row has a task label, a ✎ rename button, and a ✕ remove button on the right (each ≥44pt) |
 | 2 | Tap ✕ on a task | Native alert dialog appears with task name and "Delete Task" / "Cancel" options |
 | 3 | Tap Cancel in the dialog | Dialog dismisses; task row is still present in the list |
 | 4 | Tap ✕ again, then tap "Delete Task" | Task row is removed from the list immediately |
@@ -133,8 +134,10 @@ description: Manual QA test cases for the Petter app. Each flow covers one user-
 |---|------|-----------------|
 | 1 | Complete several tasks across slots on the current day | — |
 | 2 | Select a mood in the afternoon reflection | — |
-| 3 | Open History tab | Most recent day appears as a card at the top; card shows date, task count (e.g. "4 tasks"), and mood emoji |
-| 4 | If completions exist this week | A 🌟 weekly summary card appears above the day list, stating total completions this week |
+| 3 | Open History tab | Most recent day appears as a card at the top; card shows date and task count (e.g. "4 tasks", or "1 task" singular) |
+| 4 | Completed task names render on the card | Each completed task appears as a small periwinkle pill chip (e.g. "Feed Luna", "Fresh water"); names are translated and reflect any renames |
+| 5 | Reflection mood context | Each recorded mood renders as a row: emoji + "{Slot} · {Mood}" (e.g. "😊 Afternoon · Happy"), not a bare emoji |
+| 6 | If completions exist this week | A 🌟 weekly summary card appears above the day list, stating total completions this week |
 
 ---
 
@@ -147,3 +150,33 @@ description: Manual QA test cases for the Petter app. Each flow covers one user-
 | 1 | Complete onboarding (no tasks done yet) | — |
 | 2 | Open History tab immediately | No day cards visible; muted empty-state message is displayed centered on screen |
 | 3 | No week summary card | 🌟 card is absent since weekCompletions === 0 |
+
+---
+
+## 12. Manage — Rename a Task
+
+**Description**: User renames an existing task via the ✎ button.
+
+| # | Step | Expected Visual |
+|---|------|-----------------|
+| 1 | Open Manage tab, tap the ✎ button on a task row | Row is replaced by an inline edit form: a bordered text input pre-filled with the current task name (auto-focused) and Cancel / Save buttons |
+| 2 | Clear the input | Save button is dimmed (opacity 0.4) and non-interactive |
+| 3 | Type a new name (e.g. "Evening cuddle") | Save button becomes fully opaque |
+| 4 | Tap Save (or press Done) | Form collapses; the task row now shows the new name |
+| 5 | Open Today tab | The task appears under its slot with the renamed label |
+| 6 | Rename a default task (e.g. "Feed Luna") | Editing works the same; after save the task renders as the custom text and no longer re-translates with the pet name |
+
+---
+
+## 13. Manage — Edit Slot Reminder Time
+
+**Description**: User changes the notification time for a slot.
+
+| # | Step | Expected Visual |
+|---|------|-----------------|
+| 1 | Open Manage tab | Each slot header shows a 🔔 time pill on the right (e.g. "08:00" morning, "13:00" afternoon, "18:00" evening) |
+| 2 | Tap the time pill | An inline editor appears with two steppers (hour and minute), each with − / + buttons (≥44pt) and the current value between them, plus Cancel / Save |
+| 3 | Tap + on the hour stepper | Hour value increments (wraps 23 → 00); minute steppers adjust in steps of 5 |
+| 4 | Tap Save | Editor collapses; the time pill reflects the new time |
+| 5 | Reopen the editor | The steppers show the saved value (persisted). Notifications are silently rescheduled to the new time |
+| 6 | Tap Cancel after changing steppers | Editor collapses with no change to the saved time |

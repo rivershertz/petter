@@ -42,6 +42,7 @@ export function TaskItem({ label, completed, disabled, onComplete }: Props) {
     <Pressable
       onPress={handlePress}
       accessibilityRole="checkbox"
+      accessibilityLabel={label}
       accessibilityState={{ checked: completed, disabled }}
       style={({ pressed }) => [styles.pressable, pressed && !completed && styles.pressed]}
     >

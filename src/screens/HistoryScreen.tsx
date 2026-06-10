@@ -62,6 +62,7 @@ export function HistoryScreen({ appState }: Props) {
 }
 
 function DayCard({ record, tasks, petName }: { record: DayRecord; tasks: AppState['tasks']; petName: string }) {
+  const { t } = useTranslation();
   const date = new Date(record.date);
   const dateLabel = date.toLocaleDateString(undefined, {
     weekday: 'short', month: 'short', day: 'numeric',
@@ -69,22 +70,41 @@ function DayCard({ record, tasks, petName }: { record: DayRecord; tasks: AppStat
 
   const completedTasks = record.completions.map(c => {
     const task = tasks.find(t => t.id === c.taskId);
-    return task?.label ?? c.taskId;
+    if (!task) return c.taskId;
+    return task.isCustom ? task.label : t(task.label, { name: petName });
   });
-
-  const moods = record.reflectionResponses.map(r => r.mood);
 
   return (
     <View style={styles.dayCard}>
       <View style={styles.dayHeader}>
         <Text style={styles.dayDate}>{dateLabel}</Text>
-        <Text style={styles.dayCount}>{record.completions.length} tasks</Text>
+        <Text style={styles.dayCount}>
+          {t('history.taskCount', { count: record.completions.length })}
+        </Text>
       </View>
 
-      {moods.length > 0 && (
-        <View style={styles.moodRow}>
-          {moods.map((mood, i) => (
-            <Text key={i} style={styles.moodEmoji}>{MOOD_EMOJI[mood]}</Text>
+      {completedTasks.length > 0 && (
+        <View style={styles.taskChipRow}>
+          {completedTasks.map((label, i) => (
+            <View key={i} style={styles.taskChip}>
+              <Text style={styles.taskChipText} numberOfLines={1}>{label}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {record.reflectionResponses.length > 0 && (
+        <View style={styles.moodList}>
+          {record.reflectionResponses.map((r, i) => (
+            <View key={i} style={styles.moodContextRow}>
+              <Text style={styles.moodEmoji}>{MOOD_EMOJI[r.mood]}</Text>
+              <Text style={styles.moodContextText}>
+                {t('history.moodContext', {
+                  slot: t(`slots.${r.slotId}`),
+                  mood: t(`moods.${r.mood}`),
+                })}
+              </Text>
+            </View>
           ))}
         </View>
       )}
@@ -146,6 +166,31 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.muted,
   },
-  moodRow: { flexDirection: 'row', gap: spacing.sm },
+  taskChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  taskChip: {
+    backgroundColor: '#EEF1FC',
+    borderRadius: radii.pill,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.md,
+  },
+  taskChipText: {
+    ...typography.caption,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  moodList: { gap: spacing.xs },
+  moodContextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   moodEmoji: { fontSize: 20 },
+  moodContextText: {
+    ...typography.caption,
+    color: colors.muted,
+  },
 });

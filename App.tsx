@@ -4,10 +4,12 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useFonts, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
 
 import './src/i18n';
-import { loadState } from './src/store';
-import { AppState } from './src/types';
+import { loadState, reconcileMisses } from './src/store';
+import { rescheduleSlotNotifications } from './src/notifications';
+import { AppState, SlotId } from './src/types';
 import { colors, spacing } from './src/theme';
 
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
@@ -26,12 +28,26 @@ const TAB_ICONS: Record<string, string> = {
 export default function App() {
   const [appState, setAppState] = useState<AppState | null>(null);
   const { t } = useTranslation();
+  const [fontsLoaded] = useFonts({ Nunito_700Bold, Nunito_800ExtraBold });
 
   useEffect(() => {
-    loadState().then(setAppState);
+    loadState()
+      .then(reconcileMisses) // ADR 0001 — capture slots that closed while away
+      .then(setAppState);
   }, []);
 
-  if (!appState) {
+  // Keep the daily slot reminders in sync with the data model: schedule on
+  // launch and reschedule whenever a slot's time (or the pet name) changes.
+  useEffect(() => {
+    if (!appState?.onboardingComplete || !appState.pet) return;
+    const petName = appState.pet.name;
+    rescheduleSlotNotifications(appState.slots, (slotId: SlotId) => ({
+      title: t(`notifications.${slotId}.title`),
+      body: t(`notifications.${slotId}.body`, { name: petName }),
+    }));
+  }, [appState?.slots, appState?.pet?.name, appState?.onboardingComplete]);
+
+  if (!appState || !fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
         <ActivityIndicator color={colors.primary} />
@@ -53,8 +69,15 @@ export default function App() {
         <Tab.Navigator
           screenOptions={({ route }) => ({
             headerShown: false,
+            tabBarAccessibilityLabel: t(`tabs.${route.name.toLowerCase()}`),
             tabBarIcon: ({ color }) => (
-              <Text style={{ fontSize: 18, lineHeight: 22 }}>{TAB_ICONS[route.name] ?? ''}</Text>
+              <Text
+                style={{ fontSize: 18, lineHeight: 22 }}
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+              >
+                {TAB_ICONS[route.name] ?? ''}
+              </Text>
             ),
             tabBarLabel: ({ color }) => (
               <Text style={{ fontSize: 11, fontWeight: '600', color, marginBottom: spacing.xs }}>

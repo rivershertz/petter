@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, AccessibilityInfo } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { colors, typography } from '../theme';
 
 interface Props {
@@ -11,17 +12,31 @@ interface Props {
 export function CelebrationOverlay({ visible, message, onDone }: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.8)).current;
+  // null until we've read the OS setting; gates the confetti so hypervigilant
+  // users never get a sudden burst (PRODUCT.md — Accessibility).
+  const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
 
   useEffect(() => {
-    let reducedMotion = false;
-    AccessibilityInfo.isReduceMotionEnabled().then(v => { reducedMotion = v; });
+    if (!visible) {
+      opacity.setValue(0);
+      scale.setValue(0.8);
+      setReduceMotion(null);
+      return;
+    }
 
-    if (visible) {
-      if (reducedMotion) {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    AccessibilityInfo.isReduceMotionEnabled().then(reduced => {
+      if (cancelled) return;
+      setReduceMotion(reduced);
+
+      if (reduced) {
+        // Reduced motion: instant "Done" state, no animation, no confetti.
         opacity.setValue(1);
         scale.setValue(1);
-        const t = setTimeout(onDone, 1000);
-        return () => clearTimeout(t);
+        timer = setTimeout(onDone, 1000);
+        return;
       }
 
       Animated.parallel([
@@ -29,14 +44,12 @@ export function CelebrationOverlay({ visible, message, onDone }: Props) {
         Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
       ]).start();
 
-      const t = setTimeout(() => {
+      timer = setTimeout(() => {
         Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }).start(onDone);
       }, 1400);
-      return () => clearTimeout(t);
-    } else {
-      opacity.setValue(0);
-      scale.setValue(0.8);
-    }
+    });
+
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [visible]);
 
   if (!visible) return null;
@@ -47,59 +60,21 @@ export function CelebrationOverlay({ visible, message, onDone }: Props) {
       accessibilityLiveRegion="polite"
       accessibilityLabel={message}
     >
+      {reduceMotion === false && (
+        <LottieView
+          source={require('../../assets/confetti.json')}
+          autoPlay
+          loop={false}
+          style={styles.confetti}
+          resizeMode="cover"
+        />
+      )}
+
       <Animated.View style={[styles.bubble, { transform: [{ scale }] }]}>
         <Text style={styles.paw}>🐾</Text>
         <Text style={styles.message}>{message}</Text>
       </Animated.View>
-
-      {/* Confetti particles */}
-      <Particles />
     </Animated.View>
-  );
-}
-
-function Particles() {
-  const PARTICLES = [
-    { color: colors.celebrationPeach, top: '20%', left: '10%' },
-    { color: colors.celebrationSage, top: '25%', right: '12%' },
-    { color: colors.celebrationSky, top: '60%', left: '15%' },
-    { color: colors.celebrationYellow, top: '55%', right: '10%' },
-    { color: colors.primary, top: '35%', left: '5%' },
-    { color: colors.accent, top: '40%', right: '5%' },
-  ];
-
-  return (
-    <>
-      {PARTICLES.map((p, i) => (
-        <AnimatedParticle key={i} color={p.color} style={{ top: p.top, left: p.left, right: p.right }} delay={i * 80} />
-      ))}
-    </>
-  );
-}
-
-function AnimatedParticle({ color, style, delay }: { color: string; style: object; delay: number }) {
-  const y = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.delay(delay),
-      Animated.parallel([
-        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.timing(y, { toValue: -60, duration: 800, useNativeDriver: true }),
-      ]),
-      Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={[
-        styles.particle,
-        style as any,
-        { backgroundColor: color, transform: [{ translateY: y }], opacity },
-      ]}
-    />
   );
 }
 
@@ -114,6 +89,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.7)',
     zIndex: 200,
+  },
+  confetti: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   bubble: {
     backgroundColor: colors.white,
@@ -133,11 +115,5 @@ const styles = StyleSheet.create({
     ...typography.heading,
     color: colors.primary,
     textAlign: 'center',
-  },
-  particle: {
-    position: 'absolute',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
   },
 });

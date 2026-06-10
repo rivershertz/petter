@@ -82,6 +82,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     gap: 2,
     minWidth: 56,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   chipSelected: {
     backgroundColor: colors.accent,

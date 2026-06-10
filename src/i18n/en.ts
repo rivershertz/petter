@@ -48,10 +48,27 @@ export default {
     history: 'History',
     manage: 'Manage',
   },
+  notifications: {
+    morning: {
+      title: 'Good morning 🌅',
+      body: 'Time for your morning ritual with {{name}}.',
+    },
+    afternoon: {
+      title: 'Afternoon together ☀️',
+      body: '{{name}} would love some time with you.',
+    },
+    evening: {
+      title: 'Winding down 🌙',
+      body: 'A gentle evening with {{name}} awaits.',
+    },
+  },
   history: {
     title: 'Care History',
     weekSummary: '{{count}} tasks completed this week with {{name}}',
     empty: 'Your care history will appear here.',
+    taskCount_one: '{{count}} task',
+    taskCount_other: '{{count}} tasks',
+    moodContext: '{{slot}} · {{mood}}',
   },
   manage: {
     title: 'Manage',
@@ -61,6 +78,11 @@ export default {
     save: 'Save',
     cancel: 'Cancel',
     deleteTask: 'Remove task',
-    notificationTime: 'Notification time',
+    notificationTime: 'Reminder time',
+    notificationTimeLabel: 'Reminder at {{time}}, tap to change',
+    renameTask: 'Rename {{task}}',
+    removeTaskLabel: 'Remove {{task}}',
+    hour: 'Hour',
+    minute: 'Minute',
   },
 } as const;

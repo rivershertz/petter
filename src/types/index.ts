@@ -27,12 +27,21 @@ export interface DayRecord {
   date: string; // YYYY-MM-DD
   completions: CompletionRecord[];
   reflectionResponses: ReflectionResponse[];
+  misses: MissRecord[];
 }
 
 export interface CompletionRecord {
   taskId: string;
   slotId: SlotId;
   completedAt: string; // ISO timestamp
+}
+
+// ADR 0001 — every Task missed at slot close is silently recorded so Care
+// History can surface patterns. Never surfaced in the current day's view.
+export interface MissRecord {
+  taskId: string;
+  slotId: SlotId;
+  recordedAt: string; // ISO timestamp
 }
 
 export interface ReflectionResponse {

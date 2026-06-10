@@ -48,10 +48,29 @@ export default {
     history: 'היסטוריה',
     manage: 'ניהול',
   },
+  notifications: {
+    morning: {
+      title: 'בוקר טוב 🌅',
+      body: 'הגיע הזמן לטקס הבוקר עם {{name}}.',
+    },
+    afternoon: {
+      title: 'צהריים יחד ☀️',
+      body: '{{name}} ישמח לבלות איתך קצת.',
+    },
+    evening: {
+      title: 'נרגעים 🌙',
+      body: 'ערב רגוע עם {{name}} מחכה.',
+    },
+  },
   history: {
     title: 'היסטוריית טיפול',
     weekSummary: '{{count}} משימות הושלמו השבוע עם {{name}}',
     empty: 'היסטוריית הטיפול שלך תופיע כאן.',
+    taskCount_one: 'משימה אחת',
+    taskCount_two: '{{count}} משימות',
+    taskCount_many: '{{count}} משימות',
+    taskCount_other: '{{count}} משימות',
+    moodContext: '{{slot}} · {{mood}}',
   },
   manage: {
     title: 'ניהול',
@@ -61,6 +80,11 @@ export default {
     save: 'שמור',
     cancel: 'ביטול',
     deleteTask: 'הסר משימה',
-    notificationTime: 'זמן התראה',
+    notificationTime: 'זמן תזכורת',
+    notificationTimeLabel: 'תזכורת ב-{{time}}, הקש לשינוי',
+    renameTask: 'שינוי שם {{task}}',
+    removeTaskLabel: 'הסרת {{task}}',
+    hour: 'שעה',
+    minute: 'דקה',
   },
 } as const;
