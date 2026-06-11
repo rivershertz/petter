@@ -4,6 +4,15 @@ Tracks feature completion against the product spec in [PRODUCT.md](./PRODUCT.md)
 
 ---
 
+## Bugs (from QA run 2026-06-11)
+
+Found in [qa-results-2026-06-11-00-08.md](./qa-results-2026-06-11-00-08.md).
+
+- [ ] **Task completion crashes the app** — tapping any task checkbox throws a RedBox render error ("Attempting to run JS driven animation on animated node that has been moved to 'native' earlier by starting an animation with `useNativeDriver: true`" at `TaskItem.tsx (21:13)`). The celebration never renders, and dismissing the error leaves a permanently blank screen requiring a relaunch. Completion state does persist. Reproducible on every task tap.
+- [ ] **Mood chips double-record instead of switching** — once a mood is selected, tapping a different chip doesn't update the visual selection, but every tap silently appends a new mood record to the day's reflections. History showed 4 mood rows (Happy, Calm ×2, Anxious) for a single slot. Selecting a new mood should replace the slot's existing record.
+
+---
+
 ## Core Domain & Data
 
 - [x] Pet, Task, Slot, DayRecord, Reflection, Mood, AppState types
