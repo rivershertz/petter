@@ -26,8 +26,8 @@ export function TaskItem({ label, completed, disabled, onComplete }: Props) {
 
     // Scale pulse then complete
     Animated.sequence([
-      Animated.timing(scale, { toValue: 1.04, duration: 120, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 160, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1.04, duration: 120, useNativeDriver: false }),
+      Animated.timing(scale, { toValue: 1, duration: 160, useNativeDriver: false }),
     ]).start();
 
     onComplete();

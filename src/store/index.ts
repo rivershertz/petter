@@ -148,7 +148,7 @@ export async function recordReflectionResponse(
   const updatedRecord: DayRecord = {
     ...existingRecord,
     reflectionResponses: [
-      ...existingRecord.reflectionResponses,
+      ...existingRecord.reflectionResponses.filter(r => r.reflectionId !== reflectionId),
       { reflectionId, slotId, mood, respondedAt: new Date().toISOString() },
     ],
   };
