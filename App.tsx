@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useFonts, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
 
@@ -18,6 +18,56 @@ import { HistoryScreen } from './src/screens/HistoryScreen';
 import { ManageScreen } from './src/screens/ManageScreen';
 
 const Tab = createBottomTabNavigator();
+const TAB_BAR_HEIGHT = 60;
+
+function AppTabs({ appState, onStateChange }: { appState: AppState; onStateChange: (s: AppState) => void }) {
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarAccessibilityLabel: t(`tabs.${route.name.toLowerCase()}`),
+          tabBarIcon: ({ color }) => (
+            <Text
+              style={{ fontSize: 18, lineHeight: 22 }}
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+            >
+              {TAB_ICONS[route.name] ?? ''}
+            </Text>
+          ),
+          tabBarLabel: ({ color }) => (
+            <Text style={{ fontSize: 11, fontWeight: '600', color, marginBottom: spacing.xs }}>
+              {t(`tabs.${route.name.toLowerCase()}`)}
+            </Text>
+          ),
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.muted,
+          tabBarStyle: {
+            backgroundColor: colors.white,
+            borderTopColor: colors.border,
+            paddingTop: spacing.xs,
+            height: TAB_BAR_HEIGHT + insets.bottom,
+            paddingBottom: insets.bottom,
+          },
+        })}
+      >
+        <Tab.Screen name="Today">
+          {() => <TodayScreen appState={appState} onStateChange={onStateChange} />}
+        </Tab.Screen>
+        <Tab.Screen name="History">
+          {() => <HistoryScreen appState={appState} />}
+        </Tab.Screen>
+        <Tab.Screen name="Manage">
+          {() => <ManageScreen appState={appState} onStateChange={onStateChange} />}
+        </Tab.Screen>
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
 
 const TAB_ICONS: Record<string, string> = {
   Today: '🐾',
@@ -65,46 +115,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            headerShown: false,
-            tabBarAccessibilityLabel: t(`tabs.${route.name.toLowerCase()}`),
-            tabBarIcon: ({ color }) => (
-              <Text
-                style={{ fontSize: 18, lineHeight: 22 }}
-                accessibilityElementsHidden
-                importantForAccessibility="no"
-              >
-                {TAB_ICONS[route.name] ?? ''}
-              </Text>
-            ),
-            tabBarLabel: ({ color }) => (
-              <Text style={{ fontSize: 11, fontWeight: '600', color, marginBottom: spacing.xs }}>
-                {t(`tabs.${route.name.toLowerCase()}`)}
-              </Text>
-            ),
-            tabBarActiveTintColor: colors.primary,
-            tabBarInactiveTintColor: colors.muted,
-            tabBarStyle: {
-              backgroundColor: colors.white,
-              borderTopColor: colors.border,
-              paddingTop: spacing.xs,
-              height: 60,
-            },
-          })}
-        >
-          <Tab.Screen name="Today">
-            {() => <TodayScreen appState={appState} onStateChange={setAppState} />}
-          </Tab.Screen>
-          <Tab.Screen name="History">
-            {() => <HistoryScreen appState={appState} />}
-          </Tab.Screen>
-          <Tab.Screen name="Manage">
-            {() => <ManageScreen appState={appState} onStateChange={setAppState} />}
-          </Tab.Screen>
-        </Tab.Navigator>
-      </NavigationContainer>
+      <AppTabs appState={appState} onStateChange={setAppState} />
     </SafeAreaProvider>
   );
 }
