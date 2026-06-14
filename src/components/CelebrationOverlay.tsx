@@ -1,7 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, AccessibilityInfo } from 'react-native';
-import LottieView from 'lottie-react-native';
-import { colors, typography } from '../theme';
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  AccessibilityInfo,
+  Pressable,
+} from "react-native";
+import LottieView from "lottie-react-native";
+import { colors, typography } from "../theme";
 
 interface Props {
   visible: boolean;
@@ -27,7 +33,7 @@ export function CelebrationOverlay({ visible, message, onDone }: Props) {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
 
-    AccessibilityInfo.isReduceMotionEnabled().then(reduced => {
+    AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
       if (cancelled) return;
       setReduceMotion(reduced);
 
@@ -40,16 +46,32 @@ export function CelebrationOverlay({ visible, message, onDone }: Props) {
       }
 
       Animated.parallel([
-        Animated.spring(scale, { toValue: 1, useNativeDriver: true, friction: 6, tension: 180 }),
-        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(scale, {
+          toValue: 1,
+          useNativeDriver: true,
+          friction: 6,
+          tension: 180,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
       ]).start();
 
       timer = setTimeout(() => {
-        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }).start(onDone);
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(onDone);
       }, 1400);
     });
 
-    return () => { cancelled = true; clearTimeout(timer); };
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [visible]);
 
   if (!visible) return null;
@@ -60,17 +82,27 @@ export function CelebrationOverlay({ visible, message, onDone }: Props) {
       accessibilityLiveRegion="polite"
       accessibilityLabel={message}
     >
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPress={onDone}
+        accessibilityRole="button"
+        accessibilityHint="Tap to dismiss"
+      />
       {reduceMotion === false && (
         <LottieView
-          source={require('../../assets/confetti.json')}
+          source={require("../../assets/confetti.json")}
           autoPlay
           loop={false}
           style={styles.confetti}
+          pointerEvents="none"
           resizeMode="cover"
         />
       )}
 
-      <Animated.View style={[styles.bubble, { transform: [{ scale }] }]}>
+      <Animated.View
+        style={[styles.bubble, { transform: [{ scale }] }]}
+        pointerEvents="none"
+      >
         <Text style={styles.paw}>🐾</Text>
         <Text style={styles.message}>{message}</Text>
       </Animated.View>
@@ -80,18 +112,18 @@ export function CelebrationOverlay({ visible, message, onDone }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.7)",
     zIndex: 200,
   },
   confetti: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -102,7 +134,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingVertical: 24,
     paddingHorizontal: 36,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 8,
     shadowColor: colors.primary,
     shadowOpacity: 0.18,
@@ -114,6 +146,6 @@ const styles = StyleSheet.create({
   message: {
     ...typography.heading,
     color: colors.primary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
