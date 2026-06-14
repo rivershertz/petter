@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, typography } from '../theme';
-import { AppState, DayRecord, Mood, Reflection, SlotId, Task } from '../types';
+import { AppState, DayRecord, Mood, Reflection, SlotId } from '../types';
 import {
-  getTodayRecord, getSlotCompletionCount,
+  getTodayRecord,
   recordTaskCompletion, recordReflectionResponse,
 } from '../store';
 import { SlotSection } from '../components/SlotSection';
@@ -21,13 +21,6 @@ const REFLECTIONS: Reflection[] = [
   },
 ];
 
-function getCurrentSlotId(): SlotId {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'morning';
-  if (hour < 17) return 'afternoon';
-  return 'evening';
-}
-
 interface Props {
   appState: AppState;
   onStateChange: (state: AppState) => void;
@@ -42,15 +35,6 @@ export function TodayScreen({ appState, onStateChange }: Props) {
   const [dayRecord, setDayRecord] = useState<DayRecord>(() => getTodayRecord(appState));
 
   const petName = appState.pet?.name ?? '';
-  const activeSlot = getCurrentSlotId();
-
-  const slotStateFor = (slotId: SlotId): 'active' | 'past' | 'future' => {
-    const order = SLOT_ORDER.indexOf(slotId);
-    const activeOrder = SLOT_ORDER.indexOf(activeSlot);
-    if (order === activeOrder) return 'active';
-    if (order < activeOrder) return 'past';
-    return 'future';
-  };
 
   const handleTaskComplete = async (taskId: string, slotId: SlotId) => {
     const next = await recordTaskCompletion(appState, taskId, slotId);
@@ -92,7 +76,7 @@ export function TodayScreen({ appState, onStateChange }: Props) {
             {petName ? `${petName} 🐾` : '🐾'}
           </Text>
           <Text style={styles.date}>
-            {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+            {new Date().toLocaleDateString('he-IL', { weekday: 'long', month: 'long', day: 'numeric' })}
           </Text>
         </View>
 
@@ -103,7 +87,7 @@ export function TodayScreen({ appState, onStateChange }: Props) {
             <SlotSection
               key={slotId}
               slotId={slotId}
-              slotState={slotStateFor(slotId)}
+              slotState={'active'}
               tasks={slotTasks}
               reflection={reflection}
               dayRecord={dayRecord}

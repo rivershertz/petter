@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,19 +30,28 @@ function AppTabs({ appState, onStateChange }: { appState: AppState; onStateChang
         screenOptions={({ route }) => ({
           headerShown: false,
           tabBarAccessibilityLabel: t(`tabs.${route.name.toLowerCase()}`),
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: ({ focused }) => (
             <Text
-              style={{ fontSize: 18, lineHeight: 22 }}
+              style={styles.tabIconEmoji}
               accessibilityElementsHidden
               importantForAccessibility="no"
             >
               {TAB_ICONS[route.name] ?? ''}
             </Text>
           ),
-          tabBarLabel: ({ color }) => (
-            <Text style={{ fontSize: 11, fontWeight: '600', color, marginBottom: spacing.xs }}>
-              {t(`tabs.${route.name.toLowerCase()}`)}
-            </Text>
+          tabBarLabel: ({ focused }) => (
+            <View style={styles.tabLabelWrap}>
+              <Text style={[
+                styles.tabLabel,
+                { color: focused ? colors.primary : colors.muted },
+              ]}>
+                {t(`tabs.${route.name.toLowerCase()}`)}
+              </Text>
+              <View style={[
+                styles.tabDot,
+                focused && styles.tabDotActive,
+              ]} />
+            </View>
           ),
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.muted,
@@ -74,6 +83,31 @@ const TAB_ICONS: Record<string, string> = {
   History: '📖',
   Manage: '⚙️',
 };
+
+const styles = StyleSheet.create({
+  tabIconEmoji: {
+    fontSize: 18,
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  tabLabelWrap: {
+    alignItems: 'center',
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  tabDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    marginTop: 3,
+    backgroundColor: 'transparent',
+  },
+  tabDotActive: {
+    backgroundColor: colors.primary,
+  },
+});
 
 export default function App() {
   const [appState, setAppState] = useState<AppState | null>(null);

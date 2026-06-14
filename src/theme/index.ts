@@ -2,7 +2,8 @@
 // All color values in OKLCH (rendered as CSS/RN-compatible via hex approximations)
 // We store as hex strings for React Native compatibility
 
-import { I18nManager } from 'react-native';
+import { I18nManager, TextStyle } from 'react-native';
+import { isRTL } from '../i18n';
 
 export const colors = {
   primary: '#5B6BC8',       // oklch(0.52 0.17 252) — periwinkle indigo
@@ -45,19 +46,21 @@ export const spacing = {
 // Nunito (800/700) carries the Display and Heading roles per DESIGN.md.
 // Hebrew text always inherits the system font for correct RTL glyph rendering,
 // so Nunito is only applied on LTR (Latin) locales.
-const useNunito = !I18nManager.isRTL;
+const useNunito = !isRTL;
 export const fonts = {
   display: useNunito ? 'Nunito_800ExtraBold' : undefined,
   heading: useNunito ? 'Nunito_700Bold' : undefined,
 } as const;
 
+const rtlText: TextStyle = isRTL ? { writingDirection: 'rtl', textAlign: 'left' } : {};
+
 export const typography = {
-  display: { fontSize: 32, fontWeight: '800' as const, lineHeight: 38, fontFamily: fonts.display },
-  heading: { fontSize: 22, fontWeight: '700' as const, lineHeight: 28, fontFamily: fonts.heading },
-  body: { fontSize: 16, fontWeight: '400' as const, lineHeight: 24 },
-  label: { fontSize: 13, fontWeight: '600' as const, lineHeight: 18 },
-  caption: { fontSize: 12, fontWeight: '400' as const, lineHeight: 16 },
-} as const;
+  display: { fontSize: 32, fontWeight: '800' as const, lineHeight: 38, fontFamily: fonts.display, ...rtlText },
+  heading: { fontSize: 22, fontWeight: '700' as const, lineHeight: 28, fontFamily: fonts.heading, ...rtlText },
+  body: { fontSize: 16, fontWeight: '400' as const, lineHeight: 24, ...rtlText },
+  label: { fontSize: 13, fontWeight: '600' as const, lineHeight: 18, ...rtlText },
+  caption: { fontSize: 12, fontWeight: '400' as const, lineHeight: 16, ...rtlText },
+};
 
 export const zIndex = {
   base: 0,

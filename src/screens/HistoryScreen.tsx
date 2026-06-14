@@ -64,7 +64,7 @@ export function HistoryScreen({ appState }: Props) {
 function DayCard({ record, tasks, petName }: { record: DayRecord; tasks: AppState['tasks']; petName: string }) {
   const { t } = useTranslation();
   const date = new Date(record.date);
-  const dateLabel = date.toLocaleDateString(undefined, {
+  const dateLabel = date.toLocaleDateString('he-IL', {
     weekday: 'short', month: 'short', day: 'numeric',
   });
 
