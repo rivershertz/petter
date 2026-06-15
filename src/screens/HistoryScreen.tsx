@@ -1,7 +1,7 @@
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, radii, spacing, typography } from '../theme';
+import { useThemeColors, ColorPalette, radii, spacing, typography } from '../theme';
 import { AppState, DayRecord, Mood } from '../types';
 
 const MOOD_EMOJI: Record<Mood, string> = {
@@ -25,6 +25,7 @@ interface Props {
 
 export function HistoryScreen({ appState }: Props) {
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const petName = appState.pet?.name ?? '';
 
   const weekStart = getWeekStart();
@@ -36,32 +37,32 @@ export function HistoryScreen({ appState }: Props) {
     .slice(0, 14);
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{t('history.title')}</Text>
+        <Text style={[styles.title, { color: colors.ink }]}>{t('history.title')}</Text>
 
         {weekCompletions > 0 && (
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.summaryCardBg }]}>
             <Text style={styles.summaryEmoji}>🌟</Text>
-            <Text style={styles.summaryText}>
+            <Text style={[styles.summaryText, { color: colors.ink }]}>
               {t('history.weekSummary', { count: weekCompletions, name: petName })}
             </Text>
           </View>
         )}
 
         {sortedRecords.length === 0 && (
-          <Text style={styles.empty}>{t('history.empty')}</Text>
+          <Text style={[styles.empty, { color: colors.muted }]}>{t('history.empty')}</Text>
         )}
 
         {sortedRecords.map(record => (
-          <DayCard key={record.date} record={record} tasks={appState.tasks} petName={petName} />
+          <DayCard key={record.date} record={record} tasks={appState.tasks} petName={petName} colors={colors} />
         ))}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function DayCard({ record, tasks, petName }: { record: DayRecord; tasks: AppState['tasks']; petName: string }) {
+function DayCard({ record, tasks, petName, colors }: { record: DayRecord; tasks: AppState['tasks']; petName: string; colors: ColorPalette }) {
   const { t } = useTranslation();
   const date = new Date(record.date);
   const dateLabel = date.toLocaleDateString('he-IL', {
@@ -75,10 +76,10 @@ function DayCard({ record, tasks, petName }: { record: DayRecord; tasks: AppStat
   });
 
   return (
-    <View style={styles.dayCard}>
+    <View style={[styles.dayCard, { backgroundColor: colors.surface }]}>
       <View style={styles.dayHeader}>
-        <Text style={styles.dayDate}>{dateLabel}</Text>
-        <Text style={styles.dayCount}>
+        <Text style={[styles.dayDate, { color: colors.ink }]}>{dateLabel}</Text>
+        <Text style={[styles.dayCount, { color: colors.muted }]}>
           {t('history.taskCount', { count: record.completions.length })}
         </Text>
       </View>
@@ -86,8 +87,8 @@ function DayCard({ record, tasks, petName }: { record: DayRecord; tasks: AppStat
       {completedTasks.length > 0 && (
         <View style={styles.taskChipRow}>
           {completedTasks.map((label, i) => (
-            <View key={i} style={styles.taskChip}>
-              <Text style={styles.taskChipText} numberOfLines={1}>{label}</Text>
+            <View key={i} style={[styles.taskChip, { backgroundColor: colors.taskChipBg }]}>
+              <Text style={[styles.taskChipText, { color: colors.primary }]} numberOfLines={1}>{label}</Text>
             </View>
           ))}
         </View>
@@ -98,7 +99,7 @@ function DayCard({ record, tasks, petName }: { record: DayRecord; tasks: AppStat
           {record.reflectionResponses.map((r, i) => (
             <View key={i} style={styles.moodContextRow}>
               <Text style={styles.moodEmoji}>{MOOD_EMOJI[r.mood]}</Text>
-              <Text style={styles.moodContextText}>
+              <Text style={[styles.moodContextText, { color: colors.muted }]}>
                 {t('history.moodContext', {
                   slot: t(`slots.${r.slotId}`),
                   mood: t(`moods.${r.mood}`),
@@ -113,17 +114,15 @@ function DayCard({ record, tasks, petName }: { record: DayRecord; tasks: AppStat
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
   scroll: { flex: 1, width: '100%' },
   content: { padding: spacing.base, paddingBottom: spacing.xxl, width: '100%' },
   title: {
     ...typography.display,
-    color: colors.ink,
     marginBottom: spacing.lg,
     paddingTop: spacing.sm,
   },
   summaryCard: {
-    backgroundColor: '#EEF1FC',
     borderRadius: radii.card,
     padding: spacing.base,
     flexDirection: 'row',
@@ -134,18 +133,15 @@ const styles = StyleSheet.create({
   summaryEmoji: { fontSize: 28 },
   summaryText: {
     ...typography.body,
-    color: colors.ink,
     fontWeight: '600',
     flex: 1,
   },
   empty: {
     ...typography.body,
-    color: colors.muted,
     textAlign: 'center',
     marginTop: spacing.xxl,
   },
   dayCard: {
-    backgroundColor: colors.surface,
     borderRadius: radii.card,
     padding: spacing.base,
     marginBottom: spacing.sm,
@@ -159,12 +155,10 @@ const styles = StyleSheet.create({
   },
   dayDate: {
     ...typography.label,
-    color: colors.ink,
     fontSize: 14,
   },
   dayCount: {
     ...typography.caption,
-    color: colors.muted,
   },
   taskChipRow: {
     flexDirection: 'row',
@@ -172,14 +166,12 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   taskChip: {
-    backgroundColor: '#EEF1FC',
     borderRadius: radii.pill,
     paddingVertical: 4,
     paddingHorizontal: spacing.md,
   },
   taskChipText: {
     ...typography.caption,
-    color: colors.primary,
     fontWeight: '600',
   },
   moodList: { gap: spacing.xs },
@@ -191,6 +183,5 @@ const styles = StyleSheet.create({
   moodEmoji: { fontSize: 20 },
   moodContextText: {
     ...typography.caption,
-    color: colors.muted,
   },
 });

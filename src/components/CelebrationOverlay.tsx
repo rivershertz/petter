@@ -7,7 +7,7 @@ import {
   Pressable,
 } from "react-native";
 import LottieView from "lottie-react-native";
-import { colors, typography } from "../theme";
+import { useThemeColors, typography } from "../theme";
 
 interface Props {
   visible: boolean;
@@ -16,10 +16,9 @@ interface Props {
 }
 
 export function CelebrationOverlay({ visible, message, onDone }: Props) {
+  const colors = useThemeColors();
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.8)).current;
-  // null until we've read the OS setting; gates the confetti so hypervigilant
-  // users never get a sudden burst (PRODUCT.md — Accessibility).
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -38,7 +37,6 @@ export function CelebrationOverlay({ visible, message, onDone }: Props) {
       setReduceMotion(reduced);
 
       if (reduced) {
-        // Reduced motion: instant "Done" state, no animation, no confetti.
         opacity.setValue(1);
         scale.setValue(1);
         timer = setTimeout(onDone, 1000);
@@ -78,7 +76,7 @@ export function CelebrationOverlay({ visible, message, onDone }: Props) {
 
   return (
     <Animated.View
-      style={[styles.container, { opacity }]}
+      style={[styles.container, { opacity, backgroundColor: colors.celebrationOverlayBg }]}
       accessibilityLiveRegion="polite"
       accessibilityLabel={message}
     >
@@ -100,11 +98,11 @@ export function CelebrationOverlay({ visible, message, onDone }: Props) {
       )}
 
       <Animated.View
-        style={[styles.bubble, { transform: [{ scale }] }]}
+        style={[styles.bubble, { backgroundColor: colors.surface, shadowColor: colors.primary, transform: [{ scale }] }]}
         pointerEvents="none"
       >
         <Text style={styles.paw}>🐾</Text>
-        <Text style={styles.message}>{message}</Text>
+        <Text style={[styles.message, { color: colors.primary }]}>{message}</Text>
       </Animated.View>
     </Animated.View>
   );
@@ -119,7 +117,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.7)",
     zIndex: 200,
   },
   confetti: {
@@ -130,13 +127,11 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   bubble: {
-    backgroundColor: colors.white,
     borderRadius: 24,
     paddingVertical: 24,
     paddingHorizontal: 36,
     alignItems: "center",
     gap: 8,
-    shadowColor: colors.primary,
     shadowOpacity: 0.18,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 6 },
@@ -145,7 +140,6 @@ const styles = StyleSheet.create({
   paw: { fontSize: 36 },
   message: {
     ...typography.heading,
-    color: colors.primary,
     textAlign: "center",
   },
 });

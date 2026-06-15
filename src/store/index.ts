@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState, DayRecord, MissRecord, SlotId, Task, Slot, Mood, Pet } from '../types';
+import { AppState, DayRecord, MissRecord, SlotId, Task, Slot, Mood, Pet, ThemePreference } from '../types';
 
 const STORAGE_KEY = 'petter_state';
 
@@ -28,6 +28,7 @@ const EMPTY_STATE: AppState = {
   slots: DEFAULT_SLOTS,
   dayRecords: [],
   onboardingComplete: false,
+  themePreference: 'system',
 };
 
 export async function loadState(): Promise<AppState> {
@@ -210,6 +211,12 @@ export async function setSlotNotificationTime(
       s.id === slotId ? { ...s, notificationHour: hour, notificationMinute: minute } : s
     ),
   };
+  await saveState(next);
+  return next;
+}
+
+export async function setThemePreference(state: AppState, preference: ThemePreference): Promise<AppState> {
+  const next = { ...state, themePreference: preference };
   await saveState(next);
   return next;
 }

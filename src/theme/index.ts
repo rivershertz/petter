@@ -1,29 +1,104 @@
-// Design token system derived from DESIGN.md
-// All color values in OKLCH (rendered as CSS/RN-compatible via hex approximations)
-// We store as hex strings for React Native compatibility
-
-import { I18nManager, TextStyle } from 'react-native';
+import React, { createContext, useContext, useMemo } from 'react';
+import { I18nManager, TextStyle, useColorScheme } from 'react-native';
 import { isRTL } from '../i18n';
+import { ThemePreference } from '../types';
 
-export const colors = {
-  primary: '#5B6BC8',       // oklch(0.52 0.17 252) — periwinkle indigo
-  accent: '#E07050',        // oklch(0.68 0.19 32) — warm coral-peach
-  bg: '#FFFFFF',            // pure white
-  surface: '#F2F4FD',       // oklch(0.965 0.007 255) — barely blue-tinted
-  ink: '#1E1F30',           // oklch(0.20 0.015 258) — near-black brand-hued
-  muted: '#6B6D82',         // oklch(0.45 0.008 258) — secondary text
-  // Slot states
-  slotPast: '#B8BAD0',      // muted ink at 40%
-  slotFuture: '#D4D6E8',    // muted ink at 25%
-  // Celebration particles
+export interface ColorPalette {
+  primary: string;
+  accent: string;
+  bg: string;
+  surface: string;
+  ink: string;
+  muted: string;
+  slotPast: string;
+  slotFuture: string;
+  celebrationPeach: string;
+  celebrationSage: string;
+  celebrationSky: string;
+  celebrationYellow: string;
+  white: string;
+  border: string;
+  completedTaskBg: string;
+  pastSlotHeaderBg: string;
+  reflectionCardBg: string;
+  summaryCardBg: string;
+  taskChipBg: string;
+  celebrationOverlayBg: string;
+  activeSlotCountColor: string;
+  scrim: string;
+}
+
+const lightColors: ColorPalette = {
+  primary: '#5B6BC8',
+  accent: '#E07050',
+  bg: '#FFFFFF',
+  surface: '#F2F4FD',
+  ink: '#1E1F30',
+  muted: '#6B6D82',
+  slotPast: '#B8BAD0',
+  slotFuture: '#D4D6E8',
   celebrationPeach: '#F5C4A8',
   celebrationSage: '#B8D9B0',
   celebrationSky: '#BEC7F0',
   celebrationYellow: '#F5E5A0',
-  // Semantic
   white: '#FFFFFF',
   border: '#E8EAF4',
-} as const;
+  completedTaskBg: '#D4DBF2',
+  pastSlotHeaderBg: '#EFF1FA',
+  reflectionCardBg: '#FEF0EB',
+  summaryCardBg: '#EEF1FC',
+  taskChipBg: '#EEF1FC',
+  celebrationOverlayBg: 'rgba(255,255,255,0.7)',
+  activeSlotCountColor: 'rgba(255,255,255,0.75)',
+  scrim: 'rgba(0,0,0,0.4)',
+};
+
+const darkColors: ColorPalette = {
+  primary: '#7B8CE0',
+  accent: '#E8805E',
+  bg: '#181A2A',
+  surface: '#232540',
+  ink: '#E8E9F0',
+  muted: '#9496AE',
+  slotPast: '#4A4C68',
+  slotFuture: '#3A3C58',
+  celebrationPeach: '#F5C4A8',
+  celebrationSage: '#B8D9B0',
+  celebrationSky: '#BEC7F0',
+  celebrationYellow: '#F5E5A0',
+  white: '#FFFFFF',
+  border: '#2E3050',
+  completedTaskBg: '#2E3460',
+  pastSlotHeaderBg: '#232540',
+  reflectionCardBg: '#3A2520',
+  summaryCardBg: '#232540',
+  taskChipBg: '#2E3050',
+  celebrationOverlayBg: 'rgba(24,26,42,0.85)',
+  activeSlotCountColor: 'rgba(255,255,255,0.75)',
+  scrim: 'rgba(0,0,0,0.6)',
+};
+
+export function resolveColors(preference: ThemePreference, systemScheme: 'light' | 'dark' | null | undefined): ColorPalette {
+  if (preference === 'system') {
+    return systemScheme === 'dark' ? darkColors : lightColors;
+  }
+  return preference === 'dark' ? darkColors : lightColors;
+}
+
+const ThemeContext = createContext<ColorPalette>(lightColors);
+
+export function useThemeColors(): ColorPalette {
+  return useContext(ThemeContext);
+}
+
+export function ThemeProvider({ preference, children }: { preference: ThemePreference; children: React.ReactNode }) {
+  const systemScheme = useColorScheme();
+  const colors = useMemo(
+    () => resolveColors(preference, systemScheme),
+    [preference, systemScheme],
+  );
+  return React.createElement(ThemeContext.Provider, { value: colors }, children);
+}
 
 export const radii = {
   button: 16,
@@ -43,9 +118,6 @@ export const spacing = {
   xxl: 48,
 } as const;
 
-// Nunito (800/700) carries the Display and Heading roles per DESIGN.md.
-// Hebrew text always inherits the system font for correct RTL glyph rendering,
-// so Nunito is only applied on LTR (Latin) locales.
 const useNunito = !isRTL;
 export const fonts = {
   display: useNunito ? 'Nunito_800ExtraBold' : undefined,

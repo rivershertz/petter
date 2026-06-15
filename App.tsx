@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useFonts, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
@@ -10,19 +11,58 @@ import './src/i18n';
 import { loadState, reconcileMisses } from './src/store';
 import { rescheduleSlotNotifications } from './src/notifications';
 import { AppState, SlotId } from './src/types';
-import { colors, spacing } from './src/theme';
+import { ThemeProvider, useThemeColors, resolveColors, spacing } from './src/theme';
 
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { TodayScreen } from './src/screens/TodayScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { ManageScreen } from './src/screens/ManageScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
+const ManageStack = createNativeStackNavigator();
 const TAB_BAR_HEIGHT = 60;
+
+function ManageStackScreen({ appState, onStateChange }: { appState: AppState; onStateChange: (s: AppState) => void }) {
+  const colors = useThemeColors();
+
+  return (
+    <ManageStack.Navigator screenOptions={{ headerShown: false }}>
+      <ManageStack.Screen name="ManageMain">
+        {({ navigation }) => (
+          <ManageScreen
+            appState={appState}
+            onStateChange={onStateChange}
+            onNavigateSettings={() => navigation.navigate('Settings')}
+          />
+        )}
+      </ManageStack.Screen>
+      <ManageStack.Screen
+        name="Settings"
+        options={{
+          headerShown: true,
+          headerTitle: '',
+          headerBackTitle: '',
+          headerShadowVisible: false,
+          headerTintColor: colors.primary,
+          headerStyle: { backgroundColor: colors.bg },
+        }}
+      >
+        {() => (
+          <SettingsScreen
+            appState={appState}
+            onStateChange={onStateChange}
+          />
+        )}
+      </ManageStack.Screen>
+    </ManageStack.Navigator>
+  );
+}
 
 function AppTabs({ appState, onStateChange }: { appState: AppState; onStateChange: (s: AppState) => void }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const colors = useThemeColors();
 
   return (
     <NavigationContainer>
@@ -49,14 +89,14 @@ function AppTabs({ appState, onStateChange }: { appState: AppState; onStateChang
               </Text>
               <View style={[
                 styles.tabDot,
-                focused && styles.tabDotActive,
+                focused && [styles.tabDotActive, { backgroundColor: colors.primary }],
               ]} />
             </View>
           ),
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.muted,
           tabBarStyle: {
-            backgroundColor: colors.white,
+            backgroundColor: colors.bg,
             borderTopColor: colors.border,
             paddingTop: spacing.xs,
             height: TAB_BAR_HEIGHT + insets.bottom,
@@ -71,7 +111,7 @@ function AppTabs({ appState, onStateChange }: { appState: AppState; onStateChang
           {() => <HistoryScreen appState={appState} />}
         </Tab.Screen>
         <Tab.Screen name="Manage">
-          {() => <ManageScreen appState={appState} onStateChange={onStateChange} />}
+          {() => <ManageStackScreen appState={appState} onStateChange={onStateChange} />}
         </Tab.Screen>
       </Tab.Navigator>
     </NavigationContainer>
@@ -104,9 +144,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
     backgroundColor: 'transparent',
   },
-  tabDotActive: {
-    backgroundColor: colors.primary,
-  },
+  tabDotActive: {},
 });
 
 export default function App() {
@@ -116,12 +154,10 @@ export default function App() {
 
   useEffect(() => {
     loadState()
-      .then(reconcileMisses) // ADR 0001 — capture slots that closed while away
+      .then(reconcileMisses)
       .then(setAppState);
   }, []);
 
-  // Keep the daily slot reminders in sync with the data model: schedule on
-  // launch and reschedule whenever a slot's time (or the pet name) changes.
   useEffect(() => {
     if (!appState?.onboardingComplete || !appState.pet) return;
     const petName = appState.pet.name;
@@ -131,10 +167,13 @@ export default function App() {
     }));
   }, [appState?.slots, appState?.pet?.name, appState?.onboardingComplete]);
 
+  const themePreference = appState?.themePreference ?? 'system';
+
   if (!appState || !fontsLoaded) {
+    const loadingColors = resolveColors('system', undefined);
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
-        <ActivityIndicator color={colors.primary} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: loadingColors.bg }}>
+        <ActivityIndicator color={loadingColors.primary} />
       </View>
     );
   }
@@ -142,14 +181,18 @@ export default function App() {
   if (!appState.onboardingComplete) {
     return (
       <SafeAreaProvider>
-        <OnboardingScreen onComplete={setAppState} />
+        <ThemeProvider preference={themePreference}>
+          <OnboardingScreen onComplete={setAppState} />
+        </ThemeProvider>
       </SafeAreaProvider>
     );
   }
 
   return (
     <SafeAreaProvider>
-      <AppTabs appState={appState} onStateChange={setAppState} />
+      <ThemeProvider preference={themePreference}>
+        <AppTabs appState={appState} onStateChange={setAppState} />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

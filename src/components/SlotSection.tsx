@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
-import { colors, radii, spacing, typography } from "../theme";
+import { useThemeColors, radii, spacing, typography } from "../theme";
 import { DayRecord, Reflection, SlotId, Task } from "../types";
 import { isReflectionResponded, isTaskCompleted } from "../store";
 import { TaskItem } from "./TaskItem";
@@ -40,6 +40,7 @@ export function SlotSection({
   onReflectionSelect,
 }: Props) {
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const isActive = slotState === "active";
   const isPast = slotState === "past";
   const isFuture = slotState === "future";
@@ -52,7 +53,7 @@ export function SlotSection({
   const headerBg = isActive
     ? colors.primary
     : isPast
-      ? "#EFF1FA"
+      ? colors.pastSlotHeaderBg
       : colors.surface;
   const headerTextColor = isActive
     ? colors.white
@@ -62,15 +63,19 @@ export function SlotSection({
   const containerOpacity = isFuture ? 0.45 : 1;
 
   return (
-    <View style={[styles.container, { opacity: containerOpacity }]}>
+    <View style={[styles.container, { opacity: containerOpacity, backgroundColor: colors.surface }]}>
       <View style={[styles.header, { backgroundColor: headerBg }]}>
-        <Text style={[styles.icon]}>{SLOT_ICONS[slotId]}</Text>
+        <Text style={styles.icon}>{SLOT_ICONS[slotId]}</Text>
         <Text style={[styles.slotName, { color: headerTextColor }]}>
           {t(`slots.${slotId}`)}
         </Text>
         {allDone && (
           <Text
-            style={[styles.allDoneBadge, !isActive && styles.allDoneBadgePast]}
+            style={[
+              styles.allDoneBadge,
+              { backgroundColor: colors.white, color: colors.primary },
+              !isActive && { backgroundColor: colors.primary, color: colors.white },
+            ]}
           >
             ✓
           </Text>
@@ -79,7 +84,7 @@ export function SlotSection({
           <Text
             style={[
               styles.count,
-              { color: isActive ? "rgba(255,255,255,0.75)" : colors.muted },
+              { color: isActive ? colors.activeSlotCountColor : colors.muted },
             ]}
           >
             {completedCount}/{tasks.length}
@@ -123,7 +128,6 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: radii.card,
     overflow: "hidden",
-    backgroundColor: colors.surface,
     marginBottom: spacing.base,
   },
   header: {
@@ -145,18 +149,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   allDoneBadge: {
-    backgroundColor: colors.white,
-    color: colors.primary,
     fontWeight: "700",
     fontSize: 12,
     borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 2,
     overflow: "hidden",
-  },
-  allDoneBadgePast: {
-    backgroundColor: colors.primary,
-    color: colors.white,
   },
   body: {
     padding: spacing.base,

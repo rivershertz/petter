@@ -84,5 +84,14 @@ export default {
     removeTaskLabel: 'Remove {{task}}',
     hour: 'Hour',
     minute: 'Minute',
+    settingsRow: 'Settings',
+  },
+  settings: {
+    title: 'Settings',
+    appearance: 'Appearance',
+    theme: 'Theme',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeSystem: 'System',
   },
 } as const;

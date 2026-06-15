@@ -86,5 +86,14 @@ export default {
     removeTaskLabel: 'הסרת {{task}}',
     hour: 'שעה',
     minute: 'דקה',
+    settingsRow: 'הגדרות',
+  },
+  settings: {
+    title: 'הגדרות',
+    appearance: 'תצוגה',
+    theme: 'ערכת נושא',
+    themeLight: 'בהיר',
+    themeDark: 'כהה',
+    themeSystem: 'מערכת',
   },
 } as const;

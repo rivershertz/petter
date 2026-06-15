@@ -57,10 +57,13 @@ export interface Slot {
   notificationMinute: number;
 }
 
+export type ThemePreference = 'light' | 'dark' | 'system';
+
 export interface AppState {
   pet: Pet | null;
   tasks: Task[];
   slots: Slot[];
   dayRecords: DayRecord[];
   onboardingComplete: boolean;
+  themePreference: ThemePreference;
 }

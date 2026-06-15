@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, typography } from '../theme';
+import { useThemeColors, spacing, typography } from '../theme';
 import { AppState, DayRecord, Mood, Reflection, SlotId } from '../types';
 import {
   getTodayRecord,
@@ -12,7 +12,6 @@ import { CelebrationOverlay } from '../components/CelebrationOverlay';
 
 const SLOT_ORDER: SlotId[] = ['morning', 'afternoon', 'evening'];
 
-// Afternoon slot has a reflection after play
 const REFLECTIONS: Reflection[] = [
   {
     id: 'reflection-afternoon',
@@ -28,6 +27,7 @@ interface Props {
 
 export function TodayScreen({ appState, onStateChange }: Props) {
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const [celebration, setCelebration] = useState<{ visible: boolean; message: string }>({
     visible: false,
     message: '',
@@ -42,7 +42,6 @@ export function TodayScreen({ appState, onStateChange }: Props) {
     const nextRecord = getTodayRecord(next);
     setDayRecord(nextRecord);
 
-    // Check if entire slot is done
     const slotTasks = appState.tasks.filter(t => t.slotId === slotId);
     const completedAfter = slotTasks.filter(t =>
       nextRecord.completions.some(c => c.taskId === t.id)
@@ -65,17 +64,17 @@ export function TodayScreen({ appState, onStateChange }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.greeting}>
+          <Text style={[styles.greeting, { color: colors.ink }]}>
             {petName ? `${petName} 🐾` : '🐾'}
           </Text>
-          <Text style={styles.date}>
+          <Text style={[styles.date, { color: colors.muted }]}>
             {new Date().toLocaleDateString('he-IL', { weekday: 'long', month: 'long', day: 'numeric' })}
           </Text>
         </View>
@@ -111,7 +110,7 @@ export function TodayScreen({ appState, onStateChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
   scroll: { flex: 1, width: '100%' },
   content: {
     padding: spacing.base,
@@ -124,11 +123,9 @@ const styles = StyleSheet.create({
   },
   greeting: {
     ...typography.display,
-    color: colors.ink,
   },
   date: {
     ...typography.body,
-    color: colors.muted,
     marginTop: spacing.xs,
   },
 });

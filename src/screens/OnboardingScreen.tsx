@@ -4,7 +4,7 @@ import {
   StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, radii, spacing, typography } from '../theme';
+import { useThemeColors, radii, spacing, typography } from '../theme';
 import { completePetOnboarding } from '../store';
 import { AppState } from '../types';
 
@@ -14,6 +14,7 @@ interface Props {
 
 export function OnboardingScreen({ onComplete }: Props) {
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const [name, setName] = useState('');
   const [step, setStep] = useState<'name' | 'ready'>('name');
   const [state, setState] = useState<AppState | null>(null);
@@ -27,13 +28,13 @@ export function OnboardingScreen({ onComplete }: Props) {
 
   if (step === 'ready' && state) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
         <View style={styles.readyContainer}>
           <Text style={styles.paw}>🐾</Text>
-          <Text style={styles.readyTitle}>{t('ready.title', { name: name.trim() })}</Text>
-          <Text style={styles.readySubtitle}>{t('ready.subtitle')}</Text>
-          <Pressable style={styles.ctaButton} onPress={() => onComplete(state)}>
-            <Text style={styles.ctaText}>{t('ready.cta')}</Text>
+          <Text style={[styles.readyTitle, { color: colors.ink }]}>{t('ready.title', { name: name.trim() })}</Text>
+          <Text style={[styles.readySubtitle, { color: colors.muted }]}>{t('ready.subtitle')}</Text>
+          <Pressable style={[styles.ctaButton, { backgroundColor: colors.primary }]} onPress={() => onComplete(state)}>
+            <Text style={[styles.ctaText, { color: colors.white }]}>{t('ready.cta')}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -42,15 +43,15 @@ export function OnboardingScreen({ onComplete }: Props) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.safe}
+      style={[styles.safe, { backgroundColor: colors.bg }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <SafeAreaView style={styles.container}>
         <View style={styles.inner}>
           <Text style={styles.paw}>🐕</Text>
-          <Text style={styles.title}>{t('onboarding.title')}</Text>
+          <Text style={[styles.title, { color: colors.ink }]}>{t('onboarding.title')}</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { borderColor: colors.primary, color: colors.ink }]}
             placeholder={t('onboarding.placeholder')}
             placeholderTextColor={colors.muted}
             value={name}
@@ -61,11 +62,11 @@ export function OnboardingScreen({ onComplete }: Props) {
             autoCorrect={false}
           />
           <Pressable
-            style={[styles.ctaButton, !name.trim() && styles.ctaDisabled]}
+            style={[styles.ctaButton, { backgroundColor: colors.primary }, !name.trim() && styles.ctaDisabled]}
             onPress={handleNameSubmit}
             disabled={!name.trim()}
           >
-            <Text style={styles.ctaText}>
+            <Text style={[styles.ctaText, { color: colors.white }]}>
               {name.trim()
                 ? t('onboarding.cta', { name: name.trim() })
                 : t('onboarding.ctaDefault')}
@@ -78,7 +79,7 @@ export function OnboardingScreen({ onComplete }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
   container: { flex: 1 },
   inner: {
     flex: 1,
@@ -97,32 +98,26 @@ const styles = StyleSheet.create({
   paw: { fontSize: 56 },
   title: {
     ...typography.display,
-    color: colors.ink,
     textAlign: 'center',
   },
   readyTitle: {
     ...typography.display,
-    color: colors.ink,
     textAlign: 'center',
   },
   readySubtitle: {
     ...typography.body,
-    color: colors.muted,
     textAlign: 'center',
   },
   input: {
     width: '100%',
     borderWidth: 2,
-    borderColor: colors.primary,
     borderRadius: radii.button,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.base,
     ...typography.body,
-    color: colors.ink,
     textAlign: 'center',
   },
   ctaButton: {
-    backgroundColor: colors.primary,
     borderRadius: radii.button,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
@@ -133,6 +128,5 @@ const styles = StyleSheet.create({
   ctaText: {
     ...typography.body,
     fontWeight: '700',
-    color: colors.white,
   },
 });

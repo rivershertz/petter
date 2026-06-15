@@ -4,7 +4,7 @@ import {
   StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, radii, spacing, typography } from '../theme';
+import { useThemeColors, radii, spacing, typography } from '../theme';
 import { AppState, SlotId } from '../types';
 import { addCustomTask, removeTask, renameTask, setSlotNotificationTime } from '../store';
 
@@ -17,10 +17,12 @@ function formatTime(hour: number, minute: number): string {
 interface Props {
   appState: AppState;
   onStateChange: (state: AppState) => void;
+  onNavigateSettings: () => void;
 }
 
-export function ManageScreen({ appState, onStateChange }: Props) {
+export function ManageScreen({ appState, onStateChange, onNavigateSettings }: Props) {
   const { t } = useTranslation();
+  const colors = useThemeColors();
   const [addingToSlot, setAddingToSlot] = useState<SlotId | null>(null);
   const [newTaskName, setNewTaskName] = useState('');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -90,9 +92,9 @@ export function ManageScreen({ appState, onStateChange }: Props) {
   const adjustMinute = (delta: number) => setTempMinute(m => (m + delta + 60) % 60);
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{t('manage.title')}</Text>
+        <Text style={[styles.title, { color: colors.ink }]}>{t('manage.title')}</Text>
 
         {SLOT_ORDER.map((slotId) => {
           const slotTasks = appState.tasks.filter(t => t.slotId === slotId);
@@ -101,17 +103,17 @@ export function ManageScreen({ appState, onStateChange }: Props) {
           return (
             <View key={slotId} style={styles.slotSection}>
               <View style={styles.slotHeaderRow}>
-                <Text style={styles.slotLabel}>{t(`slots.${slotId}`)}</Text>
+                <Text style={[styles.slotLabel, { color: colors.primary }]}>{t(`slots.${slotId}`)}</Text>
                 {slot && !isEditingTime && (
                   <Pressable
-                    style={styles.timePill}
+                    style={[styles.timePill, { backgroundColor: colors.surface }]}
                     onPress={() => handleStartTimeEdit(slotId, slot.notificationHour, slot.notificationMinute)}
                     accessibilityLabel={t('manage.notificationTimeLabel', {
                       time: formatTime(slot.notificationHour, slot.notificationMinute),
                     })}
                   >
                     <Text style={styles.timePillIcon}>🔔</Text>
-                    <Text style={styles.timePillText}>
+                    <Text style={[styles.timePillText, { color: colors.muted }]}>
                       {formatTime(slot.notificationHour, slot.notificationMinute)}
                     </Text>
                   </Pressable>
@@ -119,29 +121,31 @@ export function ManageScreen({ appState, onStateChange }: Props) {
               </View>
 
               {isEditingTime && (
-                <View style={styles.timeEditor}>
-                  <Text style={styles.timeEditorLabel}>{t('manage.notificationTime')}</Text>
+                <View style={[styles.timeEditor, { backgroundColor: colors.surface }]}>
+                  <Text style={[styles.timeEditorLabel, { color: colors.ink }]}>{t('manage.notificationTime')}</Text>
                   <View style={styles.steppers}>
                     <Stepper
                       value={tempHour}
                       onDecrement={() => adjustHour(-1)}
                       onIncrement={() => adjustHour(1)}
                       label={t('manage.hour')}
+                      colors={colors}
                     />
-                    <Text style={styles.timeColon}>:</Text>
+                    <Text style={[styles.timeColon, { color: colors.ink }]}>:</Text>
                     <Stepper
                       value={tempMinute}
                       onDecrement={() => adjustMinute(-5)}
                       onIncrement={() => adjustMinute(5)}
                       label={t('manage.minute')}
+                      colors={colors}
                     />
                   </View>
                   <View style={styles.addFormButtons}>
-                    <Pressable style={styles.cancelBtn} onPress={() => setEditingTimeSlot(null)}>
-                      <Text style={styles.cancelBtnText}>{t('manage.cancel')}</Text>
+                    <Pressable style={[styles.cancelBtn, { borderColor: colors.border }]} onPress={() => setEditingTimeSlot(null)}>
+                      <Text style={[styles.cancelBtnText, { color: colors.muted }]}>{t('manage.cancel')}</Text>
                     </Pressable>
-                    <Pressable style={styles.saveBtn} onPress={handleSaveTime}>
-                      <Text style={styles.saveBtnText}>{t('manage.save')}</Text>
+                    <Pressable style={[styles.saveBtn, { backgroundColor: colors.primary }]} onPress={handleSaveTime}>
+                      <Text style={[styles.saveBtnText, { color: colors.white }]}>{t('manage.save')}</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -151,9 +155,9 @@ export function ManageScreen({ appState, onStateChange }: Props) {
                 const label = labelFor(task);
                 if (editingTaskId === task.id) {
                   return (
-                    <View key={task.id} style={styles.addForm}>
+                    <View key={task.id} style={[styles.addForm, { backgroundColor: colors.surface }]}>
                       <TextInput
-                        style={styles.input}
+                        style={[styles.input, { borderColor: colors.primary, color: colors.ink }]}
                         value={editName}
                         onChangeText={setEditName}
                         onSubmitEditing={handleSaveEdit}
@@ -162,47 +166,47 @@ export function ManageScreen({ appState, onStateChange }: Props) {
                       />
                       <View style={styles.addFormButtons}>
                         <Pressable
-                          style={styles.cancelBtn}
+                          style={[styles.cancelBtn, { borderColor: colors.border }]}
                           onPress={() => { setEditingTaskId(null); setEditName(''); }}
                         >
-                          <Text style={styles.cancelBtnText}>{t('manage.cancel')}</Text>
+                          <Text style={[styles.cancelBtnText, { color: colors.muted }]}>{t('manage.cancel')}</Text>
                         </Pressable>
                         <Pressable
-                          style={[styles.saveBtn, !editName.trim() && styles.saveBtnDisabled]}
+                          style={[styles.saveBtn, !editName.trim() && styles.saveBtnDisabled, { backgroundColor: colors.primary }]}
                           onPress={handleSaveEdit}
                           disabled={!editName.trim()}
                         >
-                          <Text style={styles.saveBtnText}>{t('manage.save')}</Text>
+                          <Text style={[styles.saveBtnText, { color: colors.white }]}>{t('manage.save')}</Text>
                         </Pressable>
                       </View>
                     </View>
                   );
                 }
                 return (
-                  <View key={task.id} style={styles.taskRow}>
-                    <Text style={styles.taskLabel} numberOfLines={1}>{label}</Text>
+                  <View key={task.id} style={[styles.taskRow, { backgroundColor: colors.surface }]}>
+                    <Text style={[styles.taskLabel, { color: colors.ink }]} numberOfLines={1}>{label}</Text>
                     <Pressable
                       onPress={() => handleStartEdit(task.id, label)}
                       style={styles.iconBtn}
                       accessibilityLabel={t('manage.renameTask', { task: label })}
                     >
-                      <Text style={styles.editBtnText}>✎</Text>
+                      <Text style={[styles.editBtnText, { color: colors.primary }]}>✎</Text>
                     </Pressable>
                     <Pressable
                       onPress={() => handleRemoveTask(task.id, label)}
                       style={styles.iconBtn}
                       accessibilityLabel={t('manage.removeTaskLabel', { task: label })}
                     >
-                      <Text style={styles.removeBtnText}>✕</Text>
+                      <Text style={[styles.removeBtnText, { color: colors.muted }]}>✕</Text>
                     </Pressable>
                   </View>
                 );
               })}
 
               {addingToSlot === slotId ? (
-                <View style={styles.addForm}>
+                <View style={[styles.addForm, { backgroundColor: colors.surface }]}>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { borderColor: colors.primary, color: colors.ink }]}
                     placeholder={t('manage.taskNamePlaceholder')}
                     placeholderTextColor={colors.muted}
                     value={newTaskName}
@@ -213,61 +217,72 @@ export function ManageScreen({ appState, onStateChange }: Props) {
                   />
                   <View style={styles.addFormButtons}>
                     <Pressable
-                      style={styles.cancelBtn}
+                      style={[styles.cancelBtn, { borderColor: colors.border }]}
                       onPress={() => { setAddingToSlot(null); setNewTaskName(''); }}
                     >
-                      <Text style={styles.cancelBtnText}>{t('manage.cancel')}</Text>
+                      <Text style={[styles.cancelBtnText, { color: colors.muted }]}>{t('manage.cancel')}</Text>
                     </Pressable>
                     <Pressable
-                      style={[styles.saveBtn, !newTaskName.trim() && styles.saveBtnDisabled]}
+                      style={[styles.saveBtn, !newTaskName.trim() && styles.saveBtnDisabled, { backgroundColor: colors.primary }]}
                       onPress={handleAddTask}
                       disabled={!newTaskName.trim()}
                     >
-                      <Text style={styles.saveBtnText}>{t('manage.save')}</Text>
+                      <Text style={[styles.saveBtnText, { color: colors.white }]}>{t('manage.save')}</Text>
                     </Pressable>
                   </View>
                 </View>
               ) : (
                 <Pressable
-                  style={styles.addBtn}
+                  style={[styles.addBtn, { borderColor: colors.primary }]}
                   onPress={() => { setAddingToSlot(slotId); setEditingTaskId(null); }}
                 >
-                  <Text style={styles.addBtnText}>+ {t('manage.addTask')}</Text>
+                  <Text style={[styles.addBtnText, { color: colors.primary }]}>+ {t('manage.addTask')}</Text>
                 </Pressable>
               )}
             </View>
           );
         })}
+
+        <Pressable
+          style={[styles.settingsRow, { backgroundColor: colors.surface }]}
+          onPress={onNavigateSettings}
+          accessibilityRole="button"
+          accessibilityLabel={t('manage.settingsRow')}
+        >
+          <Text style={styles.settingsIcon}>⚙️</Text>
+          <Text style={[styles.settingsLabel, { color: colors.ink }]}>{t('manage.settingsRow')}</Text>
+          <Text style={[styles.settingsChevron, { color: colors.muted }]}>›</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 function Stepper({
-  value, onDecrement, onIncrement, label,
+  value, onDecrement, onIncrement, label, colors,
 }: {
   value: number; onDecrement: () => void; onIncrement: () => void; label: string;
+  colors: { primary: string; ink: string };
 }) {
   return (
     <View style={styles.stepper}>
-      <Pressable style={styles.stepperBtn} onPress={onDecrement} accessibilityLabel={`${label} −`}>
-        <Text style={styles.stepperBtnText}>−</Text>
+      <Pressable style={[styles.stepperBtn, { borderColor: colors.primary }]} onPress={onDecrement} accessibilityLabel={`${label} −`}>
+        <Text style={[styles.stepperBtnText, { color: colors.primary }]}>−</Text>
       </Pressable>
-      <Text style={styles.stepperValue}>{String(value).padStart(2, '0')}</Text>
-      <Pressable style={styles.stepperBtn} onPress={onIncrement} accessibilityLabel={`${label} +`}>
-        <Text style={styles.stepperBtnText}>+</Text>
+      <Text style={[styles.stepperValue, { color: colors.ink }]}>{String(value).padStart(2, '0')}</Text>
+      <Pressable style={[styles.stepperBtn, { borderColor: colors.primary }]} onPress={onIncrement} accessibilityLabel={`${label} +`}>
+        <Text style={[styles.stepperBtnText, { color: colors.primary }]}>+</Text>
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
   scroll: { flex: 1, width: '100%' },
   content: { padding: spacing.base, paddingBottom: spacing.xxl, width: '100%' },
   title: {
     ...typography.display,
-    color: colors.ink,
     marginBottom: spacing.lg,
     paddingTop: spacing.sm,
   },
@@ -282,7 +297,6 @@ const styles = StyleSheet.create({
   },
   slotLabel: {
     ...typography.label,
-    color: colors.primary,
     textTransform: 'capitalize',
     fontSize: 15,
   },
@@ -290,7 +304,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    backgroundColor: colors.surface,
     borderRadius: radii.pill,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
@@ -299,10 +312,8 @@ const styles = StyleSheet.create({
   timePillIcon: { fontSize: 13 },
   timePillText: {
     ...typography.label,
-    color: colors.muted,
   },
   timeEditor: {
-    backgroundColor: colors.surface,
     borderRadius: radii.card,
     padding: spacing.base,
     gap: spacing.md,
@@ -310,7 +321,6 @@ const styles = StyleSheet.create({
   },
   timeEditorLabel: {
     ...typography.label,
-    color: colors.ink,
   },
   steppers: {
     flexDirection: 'row',
@@ -320,7 +330,6 @@ const styles = StyleSheet.create({
   },
   timeColon: {
     ...typography.heading,
-    color: colors.ink,
   },
   stepper: {
     flexDirection: 'row',
@@ -332,26 +341,22 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepperBtnText: {
-    color: colors.primary,
     fontSize: 22,
     fontWeight: '600',
     lineHeight: 26,
   },
   stepperValue: {
     ...typography.heading,
-    color: colors.ink,
     minWidth: 36,
     textAlign: 'center',
   },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: radii.task,
     paddingVertical: spacing.xs,
     paddingStart: spacing.base,
@@ -362,7 +367,6 @@ const styles = StyleSheet.create({
   },
   taskLabel: {
     ...typography.body,
-    color: colors.ink,
     flex: 1,
   },
   iconBtn: {
@@ -373,18 +377,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   editBtnText: {
-    color: colors.primary,
     fontSize: 16,
     fontWeight: '600',
   },
   removeBtnText: {
-    color: colors.muted,
     fontSize: 16,
     fontWeight: '600',
   },
   addBtn: {
     borderWidth: 1.5,
-    borderColor: colors.primary,
     borderStyle: 'dashed',
     borderRadius: radii.task,
     paddingVertical: spacing.md,
@@ -396,10 +397,8 @@ const styles = StyleSheet.create({
   },
   addBtnText: {
     ...typography.label,
-    color: colors.primary,
   },
   addForm: {
-    backgroundColor: colors.surface,
     borderRadius: radii.card,
     padding: spacing.base,
     gap: spacing.md,
@@ -408,29 +407,25 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1.5,
-    borderColor: colors.primary,
     borderRadius: radii.button,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.base,
     ...typography.body,
-    color: colors.ink,
     minHeight: 44,
   },
   addFormButtons: { flexDirection: 'row', gap: spacing.sm },
   cancelBtn: {
     flex: 1,
     borderWidth: 1.5,
-    borderColor: colors.border,
     borderRadius: radii.button,
     paddingVertical: spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 44,
   },
-  cancelBtnText: { ...typography.label, color: colors.muted },
+  cancelBtnText: { ...typography.label },
   saveBtn: {
     flex: 1,
-    backgroundColor: colors.primary,
     borderRadius: radii.button,
     paddingVertical: spacing.sm,
     alignItems: 'center',
@@ -438,5 +433,26 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   saveBtnDisabled: { opacity: 0.4 },
-  saveBtnText: { ...typography.label, color: colors.white },
+  saveBtnText: { ...typography.label },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radii.card,
+    padding: spacing.base,
+    marginTop: spacing.lg,
+    minHeight: 52,
+    gap: spacing.md,
+  },
+  settingsIcon: {
+    fontSize: 20,
+  },
+  settingsLabel: {
+    ...typography.body,
+    fontWeight: '600',
+    flex: 1,
+  },
+  settingsChevron: {
+    fontSize: 24,
+    fontWeight: '300',
+  },
 });

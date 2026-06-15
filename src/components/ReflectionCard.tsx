@@ -1,7 +1,7 @@
 import React from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, radii, spacing, typography } from '../theme';
+import { useThemeColors, radii, spacing, typography } from '../theme';
 import { Mood } from '../types';
 
 const MOODS: Mood[] = ['happy', 'calm', 'anxious', 'tired', 'connected'];
@@ -14,10 +14,11 @@ interface Props {
 
 export function ReflectionCard({ prompt, selectedMood, onSelect }: Props) {
   const { t } = useTranslation();
+  const colors = useThemeColors();
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.prompt}>{prompt}</Text>
+    <View style={[styles.card, { backgroundColor: colors.reflectionCardBg }]}>
+      <Text style={[styles.prompt, { color: colors.ink }]}>{prompt}</Text>
       <View style={styles.moodRow}>
         {MOODS.map((mood) => (
           <MoodChip
@@ -39,23 +40,32 @@ function MoodChip({
 }: {
   mood: Mood; emoji: string; label: string; selected: boolean; onPress: () => void;
 }) {
+  const colors = useThemeColors();
+
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected }}
-      style={[styles.chip, selected && styles.chipSelected]}
+      style={[
+        styles.chip,
+        { borderColor: colors.accent, backgroundColor: colors.bg },
+        selected && { backgroundColor: colors.accent },
+      ]}
     >
       <Text style={styles.emoji}>{emoji}</Text>
-      <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>{label}</Text>
+      <Text style={[
+        styles.chipLabel,
+        { color: colors.accent },
+        selected && { color: colors.white },
+      ]}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FEF0EB',
     borderRadius: radii.card,
     padding: spacing.base,
     marginTop: spacing.sm,
@@ -63,7 +73,6 @@ const styles = StyleSheet.create({
   },
   prompt: {
     ...typography.body,
-    color: colors.ink,
     fontWeight: '600',
   },
   moodRow: {
@@ -78,27 +87,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: radii.pill,
     borderWidth: 1.5,
-    borderColor: colors.accent,
-    backgroundColor: colors.white,
     gap: 2,
     minWidth: 56,
     minHeight: 44,
     justifyContent: 'center',
-  },
-  chipSelected: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
   },
   emoji: {
     fontSize: 20,
   },
   chipLabel: {
     ...typography.caption,
-    color: colors.accent,
     fontWeight: '600',
     textAlign: 'center',
-  },
-  chipLabelSelected: {
-    color: colors.white,
   },
 });
